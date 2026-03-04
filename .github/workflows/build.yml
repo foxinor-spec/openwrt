@@ -1,61 +1,61 @@
 name: openwrt-xiaomi4a-optimized
 
 on:
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-build:
-runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Install tools
-    run: |
-      sudo apt update
-      sudo apt install -y wget tar xz-utils git
+    steps:
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install -y wget tar xz-utils git
 
-  - name: Download ImageBuilder
-    run: |
-      wget https://downloads.openwrt.org/releases/23.05.3/targets/ramips/mt76x8/openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
-      tar -xf openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
-      mv openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64 builder
+      - name: Download ImageBuilder
+        run: |
+          wget https://downloads.openwrt.org/releases/23.05.3/targets/ramips/mt76x8/openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
+          tar -xf openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
+          mv openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64 builder
 
-  - name: Clone AmneziaWG
-    run: |
-      git clone https://github.com/amnezia-vpn/amneziawg-openwrt builder/packages/amneziawg
+      - name: Clone AmneziaWG
+        run: |
+          git clone https://github.com/amnezia-vpn/amneziawg-openwrt builder/packages/amneziawg
 
-  - name: Add system tweaks
-    run: |
-      mkdir -p builder/files/etc
-      mkdir -p builder/files/etc/sysctl.d
-      mkdir -p builder/files/etc/config
+      - name: Add system tweaks
+        run: |
+          mkdir -p builder/files/etc
+          mkdir -p builder/files/etc/sysctl.d
+          mkdir -p builder/files/etc/config
 
-      echo "#!/bin/sh" > builder/files/etc/rc.local
-      echo "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" >> builder/files/etc/rc.local
-      echo "echo 700000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq" >> builder/files/etc/rc.local
-      echo "exit 0" >> builder/files/etc/rc.local
+          echo "#!/bin/sh" > builder/files/etc/rc.local
+          echo "echo performance > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor" >> builder/files/etc/rc.local
+          echo "echo 700000 > /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq" >> builder/files/etc/rc.local
+          echo "exit 0" >> builder/files/etc/rc.local
 
-      echo "net.core.rmem_max=33554432" > builder/files/etc/sysctl.d/99-network.conf
-      echo "net.core.wmem_max=33554432" >> builder/files/etc/sysctl.d/99-network.conf
-      echo "net.core.netdev_max_backlog=8192" >> builder/files/etc/sysctl.d/99-network.conf
-      echo "net.netfilter.nf_conntrack_max=32768" >> builder/files/etc/sysctl.d/99-network.conf
-      echo "net.ipv4.tcp_fastopen=3" >> builder/files/etc/sysctl.d/99-network.conf
+          echo "net.core.rmem_max=33554432" > builder/files/etc/sysctl.d/99-network.conf
+          echo "net.core.wmem_max=33554432" >> builder/files/etc/sysctl.d/99-network.conf
+          echo "net.core.netdev_max_backlog=8192" >> builder/files/etc/sysctl.d/99-network.conf
+          echo "net.netfilter.nf_conntrack_max=32768" >> builder/files/etc/sysctl.d/99-network.conf
+          echo "net.ipv4.tcp_fastopen=3" >> builder/files/etc/sysctl.d/99-network.conf
 
-      echo "config defaults" > builder/files/etc/config/firewall
-      echo "    option input ACCEPT" >> builder/files/etc/config/firewall
-      echo "    option output ACCEPT" >> builder/files/etc/config/firewall
-      echo "    option forward REJECT" >> builder/files/etc/config/firewall
-      echo "    option flow_offloading 1" >> builder/files/etc/config/firewall
+          echo "config defaults" > builder/files/etc/config/firewall
+          echo "    option input ACCEPT" >> builder/files/etc/config/firewall
+          echo "    option output ACCEPT" >> builder/files/etc/config/firewall
+          echo "    option forward REJECT" >> builder/files/etc/config/firewall
+          echo "    option flow_offloading 1" >> builder/files/etc/config/firewall
 
-      echo "config globals" > builder/files/etc/config/network
-      echo "    option packet_steering '1'" >> builder/files/etc/config/network
+          echo "config globals" > builder/files/etc/config/network
+          echo "    option packet_steering '1'" >> builder/files/etc/config/network
 
-  - name: Build firmware
-    run: |
-      cd builder
-      make image PROFILE=xiaomi_mi-router-4a-100m FILES=files PACKAGES="luci htop nano adblock irqbalance kmod-usb-core kmod-usb2 kmod-usb-storage kmod-usb-net kmod-usb-net-rndis kmod-usb-net-ipheth usb-modeswitch block-mount kmod-fs-ext4 kmod-fs-vfat kmod-fs-ntfs3 samba4-server luci-app-samba4 mwan3 luci-app-mwan3 amneziawg -ppp -ppp-mod-pppoe -ipv6helper -odhcpd-ipv6only"
+      - name: Build firmware
+        run: |
+          cd builder
+          make image PROFILE=xiaomi_mi-router-4a-100m FILES=files PACKAGES="luci htop nano adblock irqbalance kmod-usb-core kmod-usb2 kmod-usb-storage kmod-usb-net kmod-usb-net-rndis kmod-usb-net-ipheth usb-modeswitch block-mount kmod-fs-ext4 kmod-fs-vfat kmod-fs-ntfs3 samba4-server luci-app-samba4 mwan3 luci-app-mwan3 amneziawg -ppp -ppp-mod-pppoe -ipv6helper -odhcpd-ipv6only"
 
-  - name: Upload firmware
-    uses: actions/upload-artifact@v4
-    with:
-      name: openwrt-xiaomi4a-optimized
-      path: builder/bin/targets/
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-xiaomi4a-optimized
+          path: builder/bin/targets/
