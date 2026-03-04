@@ -1,4 +1,4 @@
-name: openwrt-xiaomi4a-ultra
+name: openwrt-xiaomi4a-final
 
 on:
 workflow_dispatch:
@@ -17,39 +17,43 @@ steps:
   - name: download imagebuilder
     run: |
       wget https://downloads.openwrt.org/releases/23.05.3/targets/ramips/mt76x8/openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
-      tar -xf openwrt-imagebuilder*
-      mv openwrt-imagebuilder* builder
+      tar -xf openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64.tar.xz
+      mv openwrt-imagebuilder-23.05.3-ramips-mt76x8.Linux-x86_64 builder
 
   - name: clone extra packages
     run: |
       git clone https://github.com/amnezia-vpn/amneziawg-openwrt builder/packages/amneziawg
-      git clone https://github.com/bol-van/zapret builder/packages/zapret
 
   - name: build firmware
     run: |
       cd builder
-      make image PROFILE=xiaomi_mi-router-4a-100m FILES=files PACKAGES="\
+      make image PROFILE=xiaomi_mi-router-4a-100m PACKAGES="\
+      luci \
+      htop nano \
       kmod-usb-core \
       kmod-usb2 \
       kmod-usb-storage \
       kmod-usb-net \
       kmod-usb-net-rndis \
+      kmod-usb-net-ipheth \
       usb-modeswitch \
       block-mount \
       kmod-fs-ext4 \
+      kmod-fs-vfat \
+      kmod-fs-ntfs3 \
+      samba4-server \
+      luci-app-samba4 \
       mwan3 \
+      luci-app-mwan3 \
       amneziawg \
       -ppp \
       -ppp-mod-pppoe \
-      -firewall4 \
-      -dnsmasq \
-      -odhcpd-ipv6only \
-      -ip6tables \
-      -luci"
+      -ipv6helper \
+      -odhcpd-ipv6only"
 
   - name: upload firmware
     uses: actions/upload-artifact@v4
     with:
-      name: xiaomi4a-ultra
+      name: openwrt-xiaomi4a
       path: builder/bin/targets/
 ```
