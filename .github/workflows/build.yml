@@ -7,7 +7,6 @@ jobs:
 build:
 runs-on: ubuntu-latest
 
-```
 steps:
   - name: Install tools
     run: |
@@ -60,4 +59,3 @@ steps:
     with:
       name: openwrt-xiaomi4a-optimized
       path: builder/bin/targets/
-```
